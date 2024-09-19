@@ -1,0 +1,6 @@
+gTTS   # google text to speech
+langid   # Language Identification (LangID) tool
+deep-translator  # A flexible free and unlimited python tool to translate between different languages in a simple way using multiple translators
+openai-whisper  # Robust Speech Recognition via Large-Scale Weak Supervision
+langchain   # Building applications with LLMs through composability
+fastapi

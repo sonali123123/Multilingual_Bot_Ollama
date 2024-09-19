@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #chat-container {
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        #chat-box {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .user-message {
+            background: #e0f7fa;
+            text-align: right;
+        }
+        .bot-message {
+            background: #eeeeee;
+        }
+        #query-form {
+            display: flex;
+            align-items: center;
+        }
+        #query {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        #submit-btn {
+            padding: 10px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        #voice-btn {
+            padding: 10px;
+            border: none;
+            background: #28a745;
+            color: #fff;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        #language-select {
+            margin-right: 10px;
+        }
+        #submit-btn:disabled,
+        #voice-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #upload-form {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #upload-btn {
+            padding: 10px;
+            border: none;
+            background: #ff5722;
+            color: #fff;
+            border-radius: 5px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        #upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h1>MultiLingual PDF Chatbot</h1>
+        <form id="upload-form">
+            <input type="file" id="pdf-file" accept="application/pdf" required>
+            <button type="button" id="upload-btn">Upload PDF</button>
+        </form>
+        <div id="chat-box"></div>
+        <form id="query-form">
+            <select id="language-select">
+                <option value="en-US">English</option>
+                <option value="hi-IN">Hindi</option>
+                <option value="te-IN">Telugu</option>
+                <option value="ta-IN">Tamil</option>
+                <option value="bn-IN">Bengali</option>
+                <option value="mr-IN">Marathi</option>
+                <option value="gu-IN">Gujarati</option>
+                <option value="kn-IN">Kannada</option>
+                <option value="ml-IN">Malayalam</option>
+                <option value="sp-IN">Spanish</option>
+            </select>
+            <input type="text" id="query" name="query" placeholder="Ask a question..." required>
+            <button type="submit" id="submit-btn">Send</button>
+            <button type="button" id="voice-btn">🎤</button>
+        </form>
+    </div>
+
+    <script>
+        function setButtonsDisabled(state) {
+            document.getElementById('voice-btn').disabled = state;
+            document.getElementById('submit-btn').disabled = state;
+            document.getElementById('upload-btn').disabled = state;
+        }
+
+        // Function to handle voice input
+        document.getElementById('voice-btn').onclick = function() {
+            setButtonsDisabled(true); // Disabling buttons when starting voice input
+
+            const language = document.getElementById('language-select').value;
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = language;
+            recognition.start();
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('query').value = transcript;
+                document.getElementById('query-form').onsubmit();
+            };
+
+            recognition.onerror = function(event) {
+                alert('Error occurred in recognition: ' + event.error);
+                setButtonsDisabled(false); // Re-enabling buttons if there's an error
+            };
+        };
+
+        // Function to handle text-to-speech
+        function playAudio(url) {
+            return new Promise((resolve) => {
+                const audio = new Audio(url);
+                audio.play();
+                audio.onended = resolve;
+            });
+        }
+
+        document.getElementById('upload-btn').onclick = async function() {
+            const fileInput = document.getElementById('pdf-file');
+            if (fileInput.files.length === 0) {
+                alert('Please select a PDF file to upload.');
+                return;
+            }
+
+            setButtonsDisabled(true); // Disabling buttons when uploading
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const response = await fetch('/upload-pdf', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(result.message);
+                setButtonsDisabled(false); // Re-enabling buttons after successful upload
+            } else {
+                alert('Error: Failed to upload PDF');
+                setButtonsDisabled(false); // Re-enabling buttons if there's an error
+            }
+        };
+
+        document.getElementById('query-form').onsubmit = async function(e) {
+            if (e) e.preventDefault();
+            const query = document.getElementById('query').value;
+            const language = document.getElementById('language-select').value;
+            document.getElementById('query').value = '';
+
+            // Disabling the buttons
+            setButtonsDisabled(true);
+
+            const userMessage = document.createElement('div');
+            userMessage.classList.add('message', 'user-message');
+            userMessage.innerText = query;
+            document.getElementById('chat-box').appendChild(userMessage);
+            document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query, lang: language })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                
+                const botMessage = document.createElement('div');
+                botMessage.classList.add('message', 'bot-message');
+                botMessage.innerText = result.response;
+                document.getElementById('chat-box').appendChild(botMessage);
+                document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+
+                await playAudio(result.audio_url); // Wait until audio finish playing
+
+                // Button Reenabling
+                setButtonsDisabled(false);
+            } else {
+                const errorMessage = document.createElement('div');
+                errorMessage.classList.add('message', 'bot-message');
+                errorMessage.innerText = 'Error: Failed to get response from the server';
+                document.getElementById('chat-box').appendChild(errorMessage);
+                document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+
+                // Re-enabling the buttons in case of error
+                setButtonsDisabled(false);
+            }
+        };
+    </script>
+</body>
+</html>
