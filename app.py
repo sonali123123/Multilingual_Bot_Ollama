@@ -13,9 +13,9 @@ from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter  # Correct import
 from langchain_community.vectorstores import Chroma
 from pydantic import BaseModel
+import torch
 import chromadb.utils.embedding_functions as embedding_functions
-ef = ef = embedding_functions.InstructorEmbeddingFunction(
-model_name="hkunlp/instructor-xl", device="cpu")
+
 
 app = FastAPI()
 
@@ -28,12 +28,16 @@ os.makedirs(persist_directory, exist_ok=True)
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Initialize Chromadb Client and create/get a single collection
-settings = Settings(
-    chroma_db_impl="duckdb+parquet",  # Optional: specify if needed
-    persist_directory=persist_directory
-)
 
+# if torch.cuda.is_available():
+#     device = torch.device("cuda")
+#     print(f"CUDA is available. Using GPU: {torch.cuda.get_device_name(device)}")
+# else:
+#     device = torch.device("cpu")
+#     print("CUDA is not available. Using CPU.")
+
+ef = ef = embedding_functions.InstructorEmbeddingFunction(
+model_name="hkunlp/instructor-xl", device="cuda")
 
 
 
@@ -101,12 +105,13 @@ async def ask(request: Request):
         
         user_input = data['query']
         print(user_input)
-        #filename = request.filename
+        filename = data['file']
+        print(filename)
         #lang = request.lang
 
         #print(f"User Query: {user_input}, PDF ID: {filename}, Language: {lang}")
 
-        #collection_name = f"{filename}"
+        collection_name = f"{filename}"
 
         if not user_input:
             return JSONResponse(content={"error": "No query provided."}, status_code=400)
@@ -114,7 +119,6 @@ async def ask(request: Request):
         # Define filter to retrieve documents only from the specified PDF
         client = chromadb.PersistentClient(path="./storage")
         print(client)
-        collection_name = f"Student_Handbook.pdf"
         # ol_embed = ollama.embeddings(model="mxbai-embed-large")
         # embedding = ol_embed["embedding"]
         collection = client.get_collection(name=collection_name,embedding_function=ef)
@@ -124,7 +128,7 @@ async def ask(request: Request):
         # Retrieve relevant documents with the filter
         resp_obj = collection.query(
             query_texts=user_input,
-            n_results=3,
+            n_results=3
         )
         print(resp_obj)
 
@@ -162,8 +166,9 @@ async def ask(request: Request):
         audio_filename = f"{uuid4()}.mp3"
         audio_file_path = os.path.join("static", audio_filename)
         tts.save(audio_file_path)
+        print(f"Audio saved to: {audio_filename}")
 
-        return JSONResponse(content={"response": response_text, "audio_url": f"/static/{audio_filename}"})
+        return JSONResponse(content={"response": response_text, "audio_url": f"http://10.7.0.28:8000/static/{audio_filename}"})
     except Exception as e:
         print(f"Error during query processing: {str(e)}")
         return JSONResponse(content={"error": f"Failed to process query: {str(e)}"}, status_code=500)
@@ -185,3 +190,7 @@ def list_col():
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+    ##10.7.0.28:8000
+                                                                                                                                                                                                                          
