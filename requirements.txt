@@ -4,3 +4,24 @@ deep-translator  # A flexible free and unlimited python tool to translate betwee
 openai-whisper  # Robust Speech Recognition via Large-Scale Weak Supervision
 langchain   # Building applications with LLMs through composability
 fastapi
+chromadb  
+faiss-cpu                                
+fastapi                                  
+fastapi-cli 
+huggingface-hub
+Jinja2
+joblib
+langchain                                
+langchain-community                      
+langchain-core                           
+langchain-text-splitters                 
+langid                                   
+langsmith  
+ollama  
+openai-whisper
+pydantic                                 
+pydantic_core
+PyMuPDF                                  
+PyMuPDFb                                 
+PyPDF2 
+sentence-transformers
