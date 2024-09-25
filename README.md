@@ -1,44 +1,81 @@
-## Download and Install  Python
-https://www.python.org/downloads/ 
+## Setup Guide for Multilingual Bot with Ollama
 
-## Download and install anaconda 
-https://www.anaconda.com/download
+Follow the steps below to set up the Multilingual Bot project using Ollama.
 
-Set anaconda3/Scripts, anaconda3\Library\bin path in environment variable
+### Step 1: Download and Install Python
+Download Python from the official website: Download Python
 
-## Download and Install Ollama
-https://ollama.com/download/windows
+Install Python and ensure it is added to your system's environment variables.
 
-Set Ollama folder path in environment variable
+### Step 2: Download and Install Anaconda
 
-## Clone this  Multilingual_Bot_Ollama  repo in your vs code
+Download Anaconda: Download Anaconda
 
-### Create a conda environment using this command in command prompt inside project folder
+After installation, add the following paths to your environment variables:
+
+anaconda3/Scripts
+
+anaconda3/Library/bin
+
+### Step 3: Download and Install Ollama
+
+Download Ollama for Windows: Download Ollama
+
+Add the Ollama installation folder to your system’s environment variables.
+
+### Step 4: Clone the Multilingual_Bot_Ollama Repository
+
+Clone the repository to your local machine using Visual Studio Code (VS Code) or your preferred code editor.
+bash
+
+git clone <repository-url>  (Use this command to clone)
+
+### Step 5: Set Up the Conda Environment
+
+Open a command prompt inside the project folder.
+
+Create a new Conda environment:
+
 
 conda create --name env
 
-### Activate the environment using this command
+Activate the environment:
 
-conda activate env  (after this run all commands in this environment)
 
-### Run this command 
-conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia   (change the cuda version if you have different cuda version in your device)
+conda activate env
 
-### Install the requirements.txt by running this command
+Note: Ensure all subsequent commands are run within this environment.
+
+### Step 6: Install PyTorch and CUDA
+
+Run the following command to install PyTorch, TorchVision, and CUDA (adjust the CUDA version based on your system’s compatibility):
+
+
+conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+
+### Step 7: Install Python Dependencies
+
+Install all required dependencies from the requirements.txt file:
+
 
 pip install -r requirements.txt
 
 
-### On the other hand , start other server in command prompt and pull ollama model, using this command
+### Step 8: Set Up Ollama Model and Server
 
-ollama pull llama3.1:8b   (After successfully pulling of this model , run the server)
+In a separate terminal, pull the Ollama model:
 
-### Using this command
+
+ollama pull llama3.1:8b
+
+Once the model is successfully downloaded, start the Ollama server:
+
 
 ollama serve
 
+### Step 9: Start the FastAPI Server
 
-### Now come back to your project repo, and start fastapi server using this command
+Return to your project directory and run the FastAPI server:
+
 
 fastapi run app.py
-
