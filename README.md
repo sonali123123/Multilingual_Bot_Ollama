@@ -33,7 +33,7 @@ Add the Ollama installation folder to your system’s environment variables.
 Clone the repository to your local machine using Visual Studio Code (VS Code) or your preferred code editor.
 bash
 
-git clone <repository-url>  (Use this command to clone)
+git clone [<repository-url>](https://github.com/sonali123123/Multilingual_Bot_Ollama.git)  (Use this command to clone)
 
 ### Step 5: Set Up the Conda Environment
 
