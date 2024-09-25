@@ -3,13 +3,16 @@
 Follow the steps below to set up the Multilingual Bot project using Ollama.
 
 ### Step 1: Download and Install Python
-Download Python from the official website: Download Python
+Download Python from the official website:
+[Download Python](https://www.anaconda.com/download)
 
 Install Python and ensure it is added to your system's environment variables.
 
 ### Step 2: Download and Install Anaconda
 
-Download Anaconda: Download Anaconda
+Download Anaconda: 
+
+[Download Anaconda](https://anaconda.org/)
 
 After installation, add the following paths to your environment variables:
 
@@ -19,7 +22,9 @@ anaconda3/Library/bin
 
 ### Step 3: Download and Install Ollama
 
-Download Ollama for Windows: Download Ollama
+Download Ollama for Windows: 
+
+[Download Ollama](https://ollama.com/download/windows)
 
 Add the Ollama installation folder to your system’s environment variables.
 
