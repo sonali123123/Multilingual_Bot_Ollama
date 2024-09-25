@@ -194,6 +194,7 @@
             if (e) e.preventDefault();
             const query = document.getElementById('query').value;
             const language = document.getElementById('language-select').value;
+            const filename = document.getElementById('pdf-file').value.split('\\').pop();
             document.getElementById('query').value = '';
 
             // Disabling the buttons
@@ -210,7 +211,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ query: query, lang: language })
+                body: JSON.stringify({ query: query, file: filename, lang: language })
             });
 
             if (response.ok) {
