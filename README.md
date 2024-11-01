@@ -1,3 +1,13 @@
+### Multilingual Chatbot for pdfs:
+
+Developed a FastAPI-based PDF querying system utilizing hkunlp/instructor-xl embeddings and ChromaDB for optimized vector storage and retrieval.
+
+Integrated Ollama's Llama model for response generation, enabling contextual Q&A from document content.
+
+Implemented multilingual capabilities with Whisper for speech-to-text, gTTS for text-to-speech, and GoogleTranslator for seamless language translation
+
+
+
 ## Setup Guide for Multilingual Bot with Ollama
 
 Follow the steps below to set up the Multilingual Bot project using Ollama.
