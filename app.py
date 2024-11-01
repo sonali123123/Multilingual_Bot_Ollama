@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from gtts import gTTS
+from deep_translator import GoogleTranslator
 import os
 from uuid import uuid4
 import langid
@@ -15,6 +16,8 @@ from langchain_community.vectorstores import Chroma
 from pydantic import BaseModel
 import torch
 import chromadb.utils.embedding_functions as embedding_functions
+import whisper
+
 
 
 app = FastAPI()
@@ -27,6 +30,8 @@ os.makedirs(persist_directory, exist_ok=True)
 
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
 
 
 # if torch.cuda.is_available():
@@ -95,14 +100,52 @@ async def upload_pdf(file: UploadFile = File(...)):
 def index(request: Request):
     return templates.TemplateResponse("index4.html", {"request": request})
 
+
+# Whisper Endpoint
+@app.post("/whisper")
+async def whisper_endpoint(language: str,file: UploadFile = File(...)):
+    
+    
+# Initialize Whisper model
+    whisper_model = whisper.load_model("turbo")  # Specify weights_only=True if needed
+    try:
+        # Save the audio file temporarily
+        temp_filename = f"{file.filename}"
+        file_path = os.path.join("static", temp_filename)
+
+        
+        with open(file_path, "wb") as f:
+             f.write(await file.read())
+
+        # Transcribe the audio file with automatic language detection
+        result = whisper_model.transcribe(file_path,language = language )
+        
+        transcription_text = result.get("text", "")
+        print(transcription_text)
+        
+        # Delete the temporary file
+        os.remove(file_path)
+        
+        # Return transcription result and detected language
+        return JSONResponse(content={
+            "transcription": transcription_text
+        })
+    except Exception as e:
+        print(f"Error during audio transcription: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to transcribe audio: {e}")
+
+
 @app.post("/ask")
 async def ask(request: Request):
+
+
     
     try:
         print(Request)
         data = await request.json()
         print(data)
-        
+
+
         user_input = data['query']
         print(user_input)
         filename = data['file']
@@ -115,6 +158,26 @@ async def ask(request: Request):
 
         if not user_input:
             return JSONResponse(content={"error": "No query provided."}, status_code=400)
+        
+
+        # Translate Telugu queries to English
+        detected_lang, _ = langid.classify(user_input)
+        if detected_lang == "te":  # Telugu language code
+            translated_input = GoogleTranslator(source="te", target="en").translate(user_input)
+
+        elif detected_lang == "ta":
+            translated_input = GoogleTranslator(source="ta", target="en").translate(user_input)
+        
+        elif detected_lang == "hi":
+            translated_input = GoogleTranslator(source="hi", target="en").translate(user_input)
+
+        elif detected_lang == "sp":
+            translated_input = GoogleTranslator(source="sp", target="en").translate(user_input)
+
+        else:
+            translated_input = user_input
+
+        print(f"Translated Query: {translated_input}")
 
         # Define filter to retrieve documents only from the specified PDF
         client = chromadb.PersistentClient(path="./storage")
@@ -127,10 +190,11 @@ async def ask(request: Request):
 
         # Retrieve relevant documents with the filter
         resp_obj = collection.query(
-            query_texts=user_input,
+            query_texts=translated_input,
             n_results=3
         )
         print(resp_obj)
+        print(translated_input)
 
         # Extract documents from the response
         retrieved_docs = [doc for doc in resp_obj["documents"][0]]
@@ -150,8 +214,9 @@ async def ask(request: Request):
         """
 
         context_text = '\n\n---\n\n'.join(retrieved_docs)
-        prompt = PROMPT_TEMPLATE.format(context=context_text, question=user_input)
-
+        prompt = PROMPT_TEMPLATE.format(context=context_text, question=translated_input)
+        print("test     123")
+        print(prompt)        
         print("Generating response with Ollama")
         response = ollama.generate(
             model="llama3.1:8b",
@@ -159,6 +224,31 @@ async def ask(request: Request):
         )
         response_text = response['response']
         print(f"Generated Response: {response_text}")
+        
+
+        # Translate response back to Telugu if original query was in Telugu
+        if detected_lang == "te":
+            response_text = GoogleTranslator(source="en", target="te").translate(response_text)
+
+            print(response_text)
+
+        elif detected_lang == "ta":
+            response_text = GoogleTranslator(source="en", target="ta").translate(response_text)
+
+            print(response_text)
+
+        elif detected_lang == "hi":
+            response_text = GoogleTranslator(source="en", target="hi").translate(response_text)
+
+            print(response_text)
+
+        elif detected_lang == "sp":
+            response_text = GoogleTranslator(source="en", target="sp").translate(response_text)
+
+            print(response_text)
+
+        else:
+            response_text = response_text
 
         # Text-to-speech conversion
         input_lang, _ = langid.classify(user_input)
